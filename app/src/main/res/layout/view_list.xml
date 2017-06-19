@@ -7,19 +7,18 @@
 
     <ImageView
         android:id="@+id/imageGeo"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_weight="1"
-        android:paddingRight="@dimen/activity_horizontal_margin_mini"
+        android:layout_width="60dp"
+        android:layout_height="50dp"
         android:paddingLeft="@dimen/activity_horizontal_margin_mini"
-        app:srcCompat="@android:drawable/ic_menu_mylocation" />
+        android:paddingRight="@dimen/activity_horizontal_margin_mini"
+        android:scaleType="centerCrop"
+        app:srcCompat="@drawable/loc" />
 
     <TextView
         android:id="@+id/textGeo"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="4"
+        android:layout_gravity="center_vertical"
         android:paddingRight="@dimen/activity_horizontal_margin_mini"
         android:paddingLeft="@dimen/activity_horizontal_margin_mini"
         android:textSize="24sp" />
