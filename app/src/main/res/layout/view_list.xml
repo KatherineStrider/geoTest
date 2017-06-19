@@ -10,6 +10,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:layout_weight="1"
+        android:paddingRight="@dimen/activity_horizontal_margin_mini"
+        android:paddingLeft="@dimen/activity_horizontal_margin_mini"
         app:srcCompat="@android:drawable/ic_menu_mylocation" />
 
     <TextView
@@ -17,6 +19,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="4"
+        android:paddingRight="@dimen/activity_horizontal_margin_mini"
+        android:paddingLeft="@dimen/activity_horizontal_margin_mini"
         android:textSize="24sp" />
 
 </LinearLayout>

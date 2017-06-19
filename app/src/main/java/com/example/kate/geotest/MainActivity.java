@@ -9,9 +9,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +26,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final int MY_PERMISSIONS_REQUEST_LOCATION = 1;
     private ProgressBar progressBar;
     private TextView textLocation;
 
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent;
 
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
 
             case R.id.geoHistory:
                 intent = new Intent(MainActivity.this, GeoListActivity.class);
@@ -58,13 +59,13 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void initView(){
+    private void initView() {
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         textLocation = (TextView) findViewById(R.id.textLocation);
     }
 
-    private void getLocation(){
+    private void getLocation() {
 
         LocationManager locationManager;
         Location location;
@@ -75,22 +76,26 @@ public class MainActivity extends AppCompatActivity {
         /**
          * Для определения города используем приблизительное местоположение на основе данных сети
          */
-        if (ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            // Check Permissions Now
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_LOCATION);
+        } else {
 
-        progressBar.setVisibility(View.INVISIBLE);
-        textLocation.setVisibility(View.VISIBLE);
+            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
-        if(location == null){
-            textLocation.setText(R.string.MainActivity_GeoExсeption);
-            return;
-        }
-        else {
-            textLocation.setText(getCity(location));
+            progressBar.setVisibility(View.INVISIBLE);
+            textLocation.setVisibility(View.VISIBLE);
+
+            if (location == null) {
+                textLocation.setText(R.string.MainActivity_GeoExсeption);
+                return;
+            } else {
+                textLocation.setText(getCity(location));
+            }
         }
     }
 
@@ -106,7 +111,9 @@ public class MainActivity extends AppCompatActivity {
 
                 Address a = aList.get(0);
                 int maxAddrLine = a.getMaxAddressLineIndex();
-                if (maxAddrLine < 0) {return null;}
+                if (maxAddrLine < 0) {
+                    return null;
+                }
                 city = a.getLocality();
                 saveLocation(city);
             }
@@ -118,9 +125,44 @@ public class MainActivity extends AppCompatActivity {
         return city;
     }
 
-    private void saveLocation(String city){
+    private void saveLocation(String city) {
         ContentValues values = new ContentValues();
         values.put(DBGeoList.TableItems.C_GEO, city);
         getContentResolver().insert(DBGeoListProvider.CONTENT_URI_ITEMS, values);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+
+        Location location;
+        LocationManager locationManager = (LocationManager)
+                this.getSystemService(Context.LOCATION_SERVICE);
+        ;
+
+        if (requestCode == MY_PERMISSIONS_REQUEST_LOCATION) {
+            if (grantResults.length == 1
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                if (ActivityCompat.checkSelfPermission(this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+                progressBar.setVisibility(View.INVISIBLE);
+                textLocation.setVisibility(View.VISIBLE);
+
+                if (location == null) {
+                    textLocation.setText(R.string.MainActivity_GeoExсeption);
+                    return;
+                } else {
+                    textLocation.setText(getCity(location));
+                }
+            } else {
+                // Permission was denied or request was cancelled
+            }
+        }
     }
 }
