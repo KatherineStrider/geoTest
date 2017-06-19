@@ -3,4 +3,5 @@
     <string name="app_name">Гео Тест</string>
     <string name="MainActivity.GeoExсeption">Не удалось определить местоположение</string>
     <string name="DBGeoListProvider.UriException">Неизвестный Uri</string>
+    <string name="menuHistoryGeo">Показать историю местоположений</string>
 </resources>
