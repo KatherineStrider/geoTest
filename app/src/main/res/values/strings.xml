@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Geo Test</string>
+    <string name="MainActivity.GeoExсeption">Could not determine location</string>
+    <string name="DBGeoListProvider.UriException">Unknow URI</string>
+</resources>

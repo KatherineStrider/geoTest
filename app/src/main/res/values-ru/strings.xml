@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Гео Тест</string>
+    <string name="MainActivity.GeoExсeption">Не удалось определить местоположение</string>
+    <string name="DBGeoListProvider.UriException">Неизвестный Uri</string>
+</resources>
