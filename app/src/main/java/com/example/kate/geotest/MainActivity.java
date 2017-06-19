@@ -160,9 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     textLocation.setText(getCity(location));
                 }
-            } else {
-                // Permission was denied or request was cancelled
-            }
+            } else {return;}
         }
     }
 }
