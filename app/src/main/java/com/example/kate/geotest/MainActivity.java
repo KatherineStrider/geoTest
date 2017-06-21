@@ -8,7 +8,9 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.kate.geotest.sqlite.DBGeoList;
 import com.example.kate.geotest.sqlite.DBGeoListProvider;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_LOCATION = 1;
     private ProgressBar progressBar;
     private TextView textLocation;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,35 +71,24 @@ public class MainActivity extends AppCompatActivity {
 
     private void getLocation() {
 
-        LocationManager locationManager;
-        Location location;
-
         locationManager = (LocationManager)
                 this.getSystemService(Context.LOCATION_SERVICE);
 
         /**
-         * Для определения города используем приблизительное местоположение на основе данных сети
+         * Для определения города используем точное местоположение на основе GPS (для эмулятора)
          */
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Check Permissions Now
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     MY_PERMISSIONS_REQUEST_LOCATION);
         } else {
 
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-
-            progressBar.setVisibility(View.INVISIBLE);
-            textLocation.setVisibility(View.VISIBLE);
-
-            if (location == null) {
-                textLocation.setText(R.string.MainActivity_GeoExсeption);
-                return;
-            } else {
-                textLocation.setText(getCity(location));
-            }
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, 1000, 1,
+                    locationListener);
         }
     }
 
@@ -106,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
 
         try {
 
-            List<Address> aList = geo.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+            List<Address> aList = geo.getFromLocation(location.getLatitude(),
+                    location.getLongitude(), 1);
             if (aList.size() > 0) {
 
                 Address a = aList.get(0);
@@ -120,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
 
         } catch (IOException e) {
             e.printStackTrace();
-            return e.getLocalizedMessage();
+            FetchItemTask fetchItemTask = new FetchItemTask();
+            fetchItemTask.execute(location);
         }
         return city;
     }
@@ -135,8 +130,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
 
-        Location location;
-        LocationManager locationManager = (LocationManager)
+        locationManager = (LocationManager)
                 this.getSystemService(Context.LOCATION_SERVICE);
         ;
 
@@ -145,22 +139,60 @@ public class MainActivity extends AppCompatActivity {
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 if (ActivityCompat.checkSelfPermission(this,
-                        Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        Manifest.permission.ACCESS_FINE_LOCATION) !=
                         PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
-                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
-                progressBar.setVisibility(View.INVISIBLE);
-                textLocation.setVisibility(View.VISIBLE);
+                locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 1000, 0,
+                        locationListener);
+            } else {
+                return;
+            }
+        }
+    }
 
-                if (location == null) {
-                    textLocation.setText(R.string.MainActivity_GeoExсeption);
-                    return;
-                } else {
-                    textLocation.setText(getCity(location));
-                }
-            } else {return;}
+    private LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            progressBar.setVisibility(View.INVISIBLE);
+            textLocation.setVisibility(View.VISIBLE);
+            textLocation.setText(getCity(location));
+            locationManager.removeUpdates(locationListener);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+            Toast.makeText(MainActivity.this, "Провайдер доступен", Toast.LENGTH_LONG).show();
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+            Toast.makeText(MainActivity.this, "Провайдер недоступен", Toast.LENGTH_LONG).show();
+        }
+    };
+
+    private class FetchItemTask extends AsyncTask<Location, Void, String> {
+
+        String address;
+        @Override
+        protected String doInBackground(Location... params) {
+            return new GeoCityFetcher(params[0]).fetchItems();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if(s == null){return;}
+            saveLocation(s);
+            textLocation.setText(s);
         }
     }
 }
